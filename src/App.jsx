@@ -1,359 +1,343 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Moon, Sun, ChevronRight, Briefcase, GraduationCap, Code, Cpu, Plane, Award, Terminal } from 'lucide-react';
+import './App.css';
+import {
+  Mail, Phone, MapPin, Moon, Sun, Briefcase, GraduationCap,
+  Cpu, Plane, Terminal, Github, Linkedin, Video, Radio
+} from 'lucide-react';
 
 // --- DATA ---
+// Every claim below is backed by a real, specific detail. If you add
+// something new, keep the same rule: specific > impressive-sounding.
+
 const personalInfo = {
   name: "Bikram Paul",
-  title: "Computer Science Honours Student & UAV Engineer",
+  role: "Embedded systems engineer — UAV video, tracking & telemetry",
   email: "paulbikram20.09.04@gmail.com",
   phone: "+91 6289885701",
   location: "Kolkata, West Bengal, India",
-  summary: "Dedicated Computer Science Honours student with a strong foundation in software development and specialized expertise in unmanned aerial vehicle (UAV) engineering. Experienced in drone manufacturing, FPV systems, fixed-wing RC planes, and embedded programming. Passionate about bridging hardware and software to build, network, and optimize high-performance aerial systems.",
-  image: "Gemini_Generated_Image.png"
+  bio: "I build the software layer between a UAV's hardware and the people operating it — video, AI tracking, and flight-controller telemetry. Most of what I do is prototyping: getting the first working version of something running before it's locked down for deployment.",
+  image: "Gemini_Generated_Image.png",
+  github: "https://github.com/Bikram-20-9",
+  linkedin: "https://www.linkedin.com/in/bikram-paul-207775380"
 };
 
-const technicalSkills = [
-  "C", "C++", "JavaScript", "HTML/CSS", "React", 
-  "Linux", "Shell Scripting", "Raspberry Pi", "Embedded Systems", 
-  "Drone Flight Controllers", "CFD Analysis"
+const specSheet = [
+  { category: "Languages", items: ["C", "C++", "Python", "JavaScript"] },
+  { category: "Embedded", items: ["Raspberry Pi", "Embedded Linux", "Pixhawk", "MAVLink 2.0"] },
+  { category: "Vision / AI", items: ["OpenCV", "Object Tracking", "Socket Programming"] },
+  { category: "UAV / Aero", items: ["Flight Controllers", "CFD Analysis", "Tailscale"] },
+  { category: "Web", items: ["React", "HTML/CSS", "Shell Scripting"] },
 ];
 
-const coreCompetencies = [
-  "Project Management", "Leadership & Teamwork", 
-  "Critical Thinking", "Effective Communication", "Disciplined Work Culture"
-];
-
-const expertiseAndProjects = [
+const projects = [
   {
-    icon: <Plane className="w-6 h-6 text-blue-500" />,
-    title: "UAV Engineering & Aeromodelling",
+    icon: <Video className="w-5 h-5" style={{ color: "var(--gold)" }} />,
+    title: "Live 4G video for VTOL drones",
+    problem: "Carrier-grade NAT blocked remote video access over cellular — the actual reason 4G video is hard, not the video itself.",
     points: [
-      "Built and programmed custom FPV drones and fixed-wing RC planes from the ground up.",
-      "Integrated and configured Skydroid cameras and gimbals to ensure stable aerial imaging.",
-      "Utilized Computational Fluid Dynamics (CFD) analysis to evaluate aerodynamic performance."
-    ]
+      "Built a Raspberry Pi relay (mediamtx) paired with Tailscale to route live video without port forwarding.",
+      "Installed and running on 2 VTOL drones in active use.",
+    ],
+    metric: { value: "2", label: "VTOL drones live" },
+    stack: ["Raspberry Pi", "mediamtx", "Tailscale", "RTSP"],
   },
   {
-    icon: <Cpu className="w-6 h-6 text-emerald-500" />,
-    title: "Embedded Systems & Telemetry",
+    icon: <Cpu className="w-5 h-5" style={{ color: "var(--gold)" }} />,
+    title: "AI tracking, built from the raw protocol",
+    problem: "No library existed for the camera's tracking protocol — so I implemented it directly from its binary spec.",
     points: [
-      "Configured Raspberry Pi to act as a companion computer for advanced drone operations.",
-      "Established secure remote networking and telemetry for UAVs utilizing Tailscale and Rpanion."
-    ]
+      "Wrote a UDP client for the Skydroid C12's binary AI-tracking protocol (CRC16 framing) from scratch.",
+      "Removed the dependency on Skydroid's own app; click-to-track now runs through a custom YOLO-assisted UI.",
+    ],
+    metric: { value: "1 wk → <1 day", label: "build time → redeploy time" },
+    stack: ["Python", "OpenCV", "YOLO", "UDP / CRC16"],
   },
   {
-    icon: <Code className="w-6 h-6 text-purple-500" />,
-    title: "Software & Web Development",
+    icon: <Radio className="w-5 h-5" style={{ color: "var(--gold)" }} />,
+    title: "Fleet telemetry over 4G",
+    problem: "Direct radio telemetry maxed out at ~10–20km. That range ceiling is now gone.",
     points: [
-      "Developed responsive web applications using HTML, CSS, JavaScript, and React.",
-      "Wrote and executed shell scripts for Linux system automation and workflow efficiency.",
-      "Programmed core logic and algorithms using C and C++."
-    ]
+      "Built a Raspberry Pi–to–Pixhawk MAVLink 2.0 bridge (via Rpanion), relayed over Tailscale to Mission Planner.",
+      "Standardized the setup so it's a repeatable install, not a one-off per system.",
+    ],
+    metric: { value: "3 (+2 planned)", label: "systems running the bridge" },
+    stack: ["MAVLink 2.0", "Rpanion", "Pixhawk", "Tailscale"],
   },
-  {
-    icon: <Award className="w-6 h-6 text-orange-500" />,
-    title: "Leadership & Professional Discipline",
-    points: [
-      "Cultivated a highly disciplined work culture, leadership, and teamwork through rigorous training as a Cadet in the National Cadet Corps (NCC).",
-      "Developed resilience and cross-functional collaboration skills, directly applicable to dynamic engineering and professional environments."
-    ]
-  }
 ];
 
 const experience = [
   {
-    role: "Internship",
-    company: "Weevils Drone Private Limited",
-    period: "2025 - PRESENT",
+    role: "UAV Engineering Intern",
+    company: "Weevils Drones Private Limited",
+    period: "Sep 2025 — Present",
     points: [
-      "Contribute hands-on to drone manufacturing and aeromodelling initiatives.",
-      "Assist in the testing, wiring, and configuration of flight controllers and advanced UAV systems."
-    ]
-  }
+      "Built a live video relay (Raspberry Pi + mediamtx + Tailscale) for 2 VTOL drones, removing carrier-grade NAT as a blocker to 4G video.",
+      "Implemented the Skydroid C12's binary AI-tracking protocol from its raw spec, replacing dependency on the vendor's own app.",
+      "Standardized a Raspberry Pi–to–Pixhawk MAVLink 2.0 telemetry bridge, now running on 3 UAV systems (2 more planned) — extending telemetry access from a ~10–20km radio-link range to anywhere with 4G coverage.",
+      "Supported flight testing across roughly 5–6 test flights on 3–5 smaller drone builds, all completed successfully.",
+    ],
+  },
 ];
 
 const education = [
   {
     degree: "B.Sc. in Computer Science Honours",
-    institution: "Behala College | Calcutta University",
-    period: "2023 - PRESENT",
-    grade: ""
+    institution: "Behala College, Calcutta University",
+    period: "2023 — Present",
+    grade: "",
   },
   {
     degree: "Higher Secondary (CBSE)",
     institution: "Future Gems Academy",
     period: "2023",
-    grade: "Percentage: 79%"
+    grade: "79%",
   },
   {
     degree: "Matriculation (ICSE)",
     institution: "M.P. Birla Foundation H.S. School",
     period: "2021",
-    grade: "Percentage: 92.5%"
-  }
+    grade: "92.5%",
+  },
 ];
 
+const NAV_ITEMS = ["Home", "Systems", "Experience", "Education"];
+
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
 
-  // Toggle theme
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Scroll spy functionality
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'expertise', 'experience', 'education'];
-      const scrollPosition = window.scrollY + 100;
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(section);
-          }
+      const ids = ['home', 'systems', 'experience', 'education'];
+      const pos = window.scrollY + 120;
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) {
+          setActiveSection(id);
         }
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollTo = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop - 80, // offset for navbar
-        behavior: 'smooth'
-      });
-    }
+    const el = document.getElementById(id);
+    if (el) window.scrollTo({ top: el.offsetTop - 84, behavior: 'smooth' });
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
-      
-      {/* --- NAVBAR --- */}
-      <nav className={`fixed w-full z-50 top-0 transition-all duration-300 shadow-md ${darkMode ? 'bg-slate-900/90 backdrop-blur-md border-b border-slate-800' : 'bg-white/90 backdrop-blur-md border-b border-slate-200'}`}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "var(--bg)", color: "var(--ink)" }}
+    >
+      {/* --- NAV --- */}
+      <nav
+        className="fixed w-full z-50 top-0 border-b"
+        style={{ backgroundColor: "var(--bg)", borderColor: "var(--gold-line)" }}
+      >
+        <div className="max-w-5xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <div className="font-bold text-xl tracking-wider text-blue-600 dark:text-blue-400">
-              BP.
+            <span className="font-display font-bold text-lg">BP</span>
+            <div className="hidden md:flex gap-8">
+              {NAV_ITEMS.map((item) => {
+                const id = item.toLowerCase();
+                return (
+                  <button
+                    key={item}
+                    onClick={() => scrollTo(id)}
+                    data-active={activeSection === id}
+                    className="nav-link text-sm font-medium"
+                    style={{ color: activeSection === id ? "var(--ink)" : "var(--ink-dim)" }}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
             </div>
-            <div className="hidden md:flex space-x-8">
-              {['Home', 'Expertise', 'Experience', 'Education'].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => scrollTo(item.toLowerCase())}
-                  className={`text-sm font-medium hover:text-blue-500 transition-colors ${
-                    activeSection === item.toLowerCase() ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500' : 'text-slate-600 dark:text-slate-300'
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <button 
+            <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-              aria-label="Toggle Dark Mode"
+              aria-label="Toggle theme"
+              className="p-2 rounded"
             >
-              {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        
-        {/* --- HERO SECTION --- */}
-        <section id="home" className="py-12 md:py-20 flex flex-col-reverse md:flex-row items-center justify-between gap-12">
-          <div className="flex-1 space-y-6 text-center md:text-left">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-              Hi, I'm <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300">{personalInfo.name}</span>
-            </h1>
-            <h2 className="text-xl md:text-2xl font-medium text-slate-600 dark:text-slate-300">
-              {personalInfo.title}
-            </h2>
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-              {personalInfo.summary}
+      <main className="max-w-5xl mx-auto px-6 pt-16">
+        {/* --- HERO --- */}
+        <section id="home" className="py-20 grid md:grid-cols-[1.3fr_0.7fr] gap-12 items-start">
+          <div>
+            <p className="font-mono text-sm mb-3" style={{ color: "var(--ink-dim)" }}>
+              {personalInfo.role}
             </p>
-            
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+            <h1 className="font-display text-5xl font-bold mb-6 leading-tight">
+              {personalInfo.name}
+            </h1>
+            <p className="text-base leading-relaxed max-w-md mb-8" style={{ color: "var(--ink-dim)" }}>
+              {personalInfo.bio}
+            </p>
+
+            <div className="flex flex-col gap-2 font-mono text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {personalInfo.location}</span>
               <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {personalInfo.email}</span>
               <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {personalInfo.phone}</span>
             </div>
 
-            <div className="flex items-center justify-center md:justify-start gap-4 pt-6">
-              <button 
-                onClick={() => scrollTo('expertise')}
-                className="px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => scrollTo('systems')}
+                className="px-5 py-2.5 font-medium text-sm rounded"
+                style={{ backgroundColor: "var(--gold)", color: "var(--bg)" }}
               >
-                View My Work
+                View systems built
               </button>
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="p-3 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-                <Code className="w-5 h-5" />
+              <a href={personalInfo.github} target="_blank" rel="noreferrer"
+                 className="p-2.5 rounded panel" aria-label="GitHub">
+                <Github className="w-4 h-4" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="p-3 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-                <User className="w-5 h-5" />
+              <a href={personalInfo.linkedin} target="_blank" rel="noreferrer"
+                 className="p-2.5 rounded panel" aria-label="LinkedIn">
+                <Linkedin className="w-4 h-4" />
               </a>
             </div>
           </div>
-          
-          <div className="flex-shrink-0 relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative w-48 h-48 md:w-72 md:h-72 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl">
-              <img 
-                src={personalInfo.image} 
-                alt={personalInfo.name} 
-                className="w-full h-full object-cover object-[center_15%]"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/300?text=BP";
-                }}
+
+          <div className="panel p-2">
+            <div className="aspect-[4/5] overflow-hidden rounded" style={{ backgroundColor: "var(--ink-dim)" }}>
+              <img
+                src={personalInfo.image}
+                alt={personalInfo.name}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
+            <p className="font-mono text-xs mt-2 pt-2 border-t text-center" style={{ color: "var(--ink-dim)", borderColor: "var(--gold-line)" }}>
+              FIG. 1 — B. PAUL, KOLKATA
+            </p>
           </div>
         </section>
 
-        {/* --- SKILLS SECTION --- */}
-        <section className="py-12 border-t border-slate-200 dark:border-slate-800">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-blue-500" /> Technical Skills
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {technicalSkills.map((skill, index) => (
-                  <span key={index} className="px-4 py-2 text-sm font-medium rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-default">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-purple-500" /> Core Competencies
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {coreCompetencies.map((skill, index) => (
-                  <span key={index} className="px-4 py-2 text-sm font-medium rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-default">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* --- EXPERTISE & PROJECTS --- */}
-        <section id="expertise" className="py-16">
-          <h2 className="text-3xl font-bold mb-10 flex items-center gap-3">
-            <Code className="w-8 h-8 text-blue-500" /> Expertise & Projects
+        {/* --- SPEC SHEET (SKILLS) --- */}
+        <section className="py-12 border-t" style={{ borderColor: "var(--gold-line)" }}>
+          <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-3">
+            <Terminal className="w-5 h-5" style={{ color: "var(--gold)" }} /> Spec sheet
           </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {expertiseAndProjects.map((item, index) => (
-              <div 
-                key={index} 
-                className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+          <div className="panel overflow-hidden">
+            {specSheet.map((row, i) => (
+              <div
+                key={row.category}
+                className="grid grid-cols-[120px_1fr] md:grid-cols-[160px_1fr] gap-4 px-5 py-4"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-700 group-hover:scale-110 transition-transform duration-300">
-                    {item.icon}
-                  </div>
-                  <h3 className="text-xl font-bold">{item.title}</h3>
+                <span className="font-medium text-sm pt-1">{row.category}</span>
+                <div className="flex flex-wrap gap-2">
+                  {row.items.map((item) => (
+                    <span key={item} className="tag">{item}</span>
+                  ))}
                 </div>
-                <ul className="space-y-3">
-                  {item.points.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                      <ChevronRight className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm leading-relaxed">{point}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* --- SYSTEMS BUILT (PROJECTS) --- */}
+        <section id="systems" className="py-16">
+          <h2 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
+            <Plane className="w-5 h-5" style={{ color: "var(--gold)" }} /> Systems built
+          </h2>
+          <p className="text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
+            Real deployments from the Weevils Drones internship — problem, build, and outcome for each.
+          </p>
+          <div className="grid md:grid-cols-2 gap-5">
+            {projects.map((p) => (
+              <div key={p.title} className="panel p-6 flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  {p.icon}
+                  <h3 className="font-display font-semibold text-lg">{p.title}</h3>
+                </div>
+                <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{p.problem}</p>
+                <ul className="space-y-2 mb-5 flex-grow">
+                  {p.points.map((pt, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className="via-dot mt-1.5" />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-end justify-between pt-4 border-t" style={{ borderColor: "var(--gold-line)" }}>
+                  <div>
+                    <div className="font-display text-xl font-bold" style={{ color: "var(--gold)" }}>{p.metric.value}</div>
+                    <div className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{p.metric.label}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 justify-end">
+                    {p.stack.map((s) => <span key={s} className="tag">{s}</span>)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* --- EXPERIENCE --- */}
+        <section id="experience" className="py-16 border-t" style={{ borderColor: "var(--gold-line)" }}>
+          <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
+            <Briefcase className="w-5 h-5" style={{ color: "var(--gold)" }} /> Experience
+          </h2>
+          {experience.map((job) => (
+            <div key={job.company} className="grid md:grid-cols-[160px_1fr] gap-6">
+              <div>
+                <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{job.period}</span>
+              </div>
+              <div className="pl-6 border-l-2" style={{ borderColor: "var(--gold-line)" }}>
+                <h3 className="font-display font-semibold text-lg">{job.role}</h3>
+                <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{job.company}</p>
+                <ul className="space-y-2.5">
+                  {job.points.map((pt, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className="via-dot mt-1.5" />
+                      <span>{pt}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* --- WORK EXPERIENCE --- */}
-        <section id="experience" className="py-16">
-          <h2 className="text-3xl font-bold mb-10 flex items-center gap-3">
-            <Briefcase className="w-8 h-8 text-blue-500" /> Work Experience
-          </h2>
-          <div className="space-y-8">
-            {experience.map((job, index) => (
-              <div key={index} className="relative pl-8 md:pl-0">
-                <div className="md:grid md:grid-cols-4 md:gap-8 items-start">
-                  {/* Timeline dot for desktop */}
-                  <div className="hidden md:block absolute left-[24.5%] top-2 w-4 h-4 rounded-full bg-blue-500 border-4 border-slate-50 dark:border-slate-900 z-10"></div>
-                  {/* Timeline line for desktop */}
-                  <div className="hidden md:block absolute left-[25.2%] top-6 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-px"></div>
-                  
-                  <div className="md:col-span-1 md:text-right mb-2 md:mb-0 relative">
-                    {/* Timeline dot for mobile */}
-                    <div className="md:hidden absolute -left-8 top-1.5 w-3 h-3 rounded-full bg-blue-500"></div>
-                    {/* Timeline line for mobile */}
-                    <div className="md:hidden absolute -left-[27px] top-4 bottom-[-40px] w-0.5 bg-slate-200 dark:bg-slate-700"></div>
-                    
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30">
-                      {job.period}
-                    </span>
-                  </div>
-                  <div className="md:col-span-3 p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow">
-                    <h3 className="text-xl font-bold">{job.company}</h3>
-                    <h4 className="text-lg text-slate-500 dark:text-slate-400 font-medium mb-4">{job.role}</h4>
-                    <ul className="space-y-2">
-                      {job.points.map((point, i) => (
-                        <li key={i} className="flex items-start gap-2 text-slate-600 dark:text-slate-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-2"></span>
-                          <span className="text-sm leading-relaxed">{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </section>
 
         {/* --- EDUCATION --- */}
-        <section id="education" className="py-16">
-          <h2 className="text-3xl font-bold mb-10 flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-blue-500" /> Education
+        <section id="education" className="py-16 border-t" style={{ borderColor: "var(--gold-line)" }}>
+          <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
+            <GraduationCap className="w-5 h-5" style={{ color: "var(--gold)" }} /> Education
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {education.map((edu, index) => (
-              <div key={index} className="p-6 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-t-4 border-t-blue-500">
-                <span className="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-2 block uppercase">
-                  {edu.period}
-                </span>
-                <h3 className="text-lg font-bold leading-tight mb-2">{edu.degree}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{edu.institution}</p>
-                {edu.grade && (
-                  <span className="inline-block px-2 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-semibold rounded">
-                    {edu.grade}
-                  </span>
-                )}
+          <div className="panel overflow-hidden">
+            {education.map((edu, i) => (
+              <div
+                key={edu.degree}
+                className="grid grid-cols-[100px_1fr_auto] gap-4 items-center px-5 py-4"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
+              >
+                <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{edu.period}</span>
+                <div>
+                  <div className="font-medium text-sm">{edu.degree}</div>
+                  <div className="text-xs" style={{ color: "var(--ink-dim)" }}>{edu.institution}</div>
+                </div>
+                {edu.grade && <span className="tag">{edu.grade}</span>}
               </div>
             ))}
           </div>
         </section>
-
       </main>
 
-      {/* --- FOOTER --- */}
-      <footer className="py-8 text-center border-t border-slate-200 dark:border-slate-800">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          © {new Date().getFullYear()} Bikram Paul. All rights reserved.
+      <footer className="py-8 border-t text-center" style={{ borderColor: "var(--gold-line)" }}>
+        <p className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>
+          © {new Date().getFullYear()} Bikram Paul — Kolkata, India
         </p>
       </footer>
     </div>
