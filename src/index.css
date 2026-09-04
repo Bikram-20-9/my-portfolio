@@ -1,2 +1,73 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #EDEADB;
+  --panel: #E2DFC9;
+  --ink: #16241C;
+  --ink-dim: #56645A;
+  --gold: #8C6A14;
+  --gold-line: rgba(140, 106, 20, 0.32);
+  --teal: #2E7A6C;
+}
+
+.dark {
+  --bg: #0E2A22;
+  --panel: #15392E;
+  --ink: #ECE8D8;
+  --ink-dim: #A7B8AC;
+  --gold: #D8B451;
+  --gold-line: rgba(216, 180, 81, 0.28);
+  --teal: #7FD1C4;
+}
+
+* {
+  border-color: var(--gold-line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.font-display {
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+.panel {
+  background-color: var(--panel);
+  border: 1px solid var(--gold-line);
+  border-radius: 4px;
+}
+
+.via-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
