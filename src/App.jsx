@@ -2,8 +2,31 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import {
   Mail, Phone, MapPin, Moon, Sun, Briefcase, GraduationCap,
-  Cpu, Plane, Terminal, Github, Linkedin, Video, Radio
+  Cpu, Plane, Terminal, Video, Radio
 } from 'lucide-react';
+
+// lucide-react does not ship brand/logo icons (no Github, no Linkedin) —
+// using small inline SVGs instead so this doesn't depend on the icon
+// library having them.
+const GithubIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" {...props}>
+    <path d="M12 .5C5.73.5.5 5.74.5 12.02c0 5.02 3.26 9.28 7.78 10.79.57.1.78-.25.78-.55
+      0-.27-.01-1.16-.02-2.11-3.17.69-3.84-1.34-3.84-1.34-.52-1.32-1.27-1.67-1.27-1.67
+      -1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.34.95
+      .1-.74.4-1.24.72-1.53-2.53-.29-5.19-1.27-5.19-5.63 0-1.24.44-2.26 1.17-3.06
+      -.12-.29-.51-1.45.11-3.02 0 0 .96-.31 3.14 1.17.91-.25 1.89-.38 2.86-.39
+      .97 0 1.95.13 2.86.39 2.18-1.48 3.14-1.17 3.14-1.17.62 1.57.23 2.73.11 3.02
+      .73.8 1.17 1.82 1.17 3.06 0 4.37-2.66 5.34-5.2 5.62.41.36.77 1.06.77 2.15
+      0 1.55-.01 2.8-.01 3.18 0 .3.2.66.79.55A10.53 10.53 0 0 0 23.5 12.02
+      C23.5 5.74 18.27.5 12 .5z"/>
+  </svg>
+);
+const LinkedinIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" {...props}>
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05
+      c.48-.9 1.64-1.85 3.38-1.85 3.61 0 4.28 2.38 4.28 5.47v6.27zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45z"/>
+  </svg>
+);
 
 // --- DATA ---
 // Every claim below is backed by a real, specific detail. If you add
@@ -200,11 +223,11 @@ export default function App() {
               </button>
               <a href={personalInfo.github} target="_blank" rel="noreferrer"
                  className="p-2.5 rounded panel" aria-label="GitHub">
-                <Github className="w-4 h-4" />
+                <GithubIcon />
               </a>
               <a href={personalInfo.linkedin} target="_blank" rel="noreferrer"
                  className="p-2.5 rounded panel" aria-label="LinkedIn">
-                <Linkedin className="w-4 h-4" />
+                <LinkedinIcon />
               </a>
             </div>
           </div>
