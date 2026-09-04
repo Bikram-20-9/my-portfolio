@@ -1,16 +1,41 @@
-# React + Vite
+# Bikram Paul — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio built with React + Vite + Tailwind CSS v4.
 
-Currently, two official plugins are available:
+## Content notes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+All project descriptions and metrics in `App.jsx` are pulled directly from
+real work at Weevils Drones Private Limited. Two rules to keep this true
+going forward:
 
-## React Compiler
+1. Every metric shown (drone count, system count, timing) should be a real
+   number you can defend if someone asks about it directly. If you don't
+   have a real number for something new, leave it out rather than
+   estimating one that sounds better.
+2. Before adding anything from internship work, check it's not something
+   Weevils considers internal/proprietary (infra details, internal naming,
+   credentials).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Structure
 
-## Expanding the ESLint configuration
+- `App.jsx` — all page content and layout lives here, data objects at the
+  top (`personalInfo`, `specSheet`, `projects`, `experience`, `education`)
+  so content updates don't require touching markup.
+- `index.css` — design tokens (colors, fonts) as CSS variables, toggled
+  between light/dark via the `.dark` class on `<html>`.
+- `App.css` — small, targeted overrides that don't fit as Tailwind
+  utilities (nav active state, the `.tag` chip style).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Updating the GitHub link
+
+`personalInfo.github` currently points at the profile root
+(`github.com/Bikram-20-9`). Once the UAV video/tracking/telemetry project
+has its own public repo, point this at that repo directly instead —
+that's the actual proof-of-work link, not just a profile page.
