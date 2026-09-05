@@ -155,7 +155,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen pcb-texture"
       style={{ backgroundColor: "var(--bg)", color: "var(--ink)" }}
     >
       {/* --- NAV --- */}
@@ -185,7 +185,7 @@ export default function App() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               aria-label="Toggle theme"
-              className="p-2 rounded"
+              className="icon-btn p-2 rounded"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -197,42 +197,42 @@ export default function App() {
         {/* --- HERO --- */}
         <section id="home" className="py-20 grid md:grid-cols-[1.3fr_0.7fr] gap-12 items-start">
           <div>
-            <p className="font-mono text-sm mb-3" style={{ color: "var(--ink-dim)" }}>
+            <p className="fade-up font-mono text-sm mb-3" style={{ color: "var(--ink-dim)" }}>
               {personalInfo.role}
             </p>
-            <h1 className="font-display text-5xl font-bold mb-6 leading-tight">
+            <h1 className="fade-up font-display text-5xl font-bold mb-6 leading-tight" style={{ animationDelay: "0.08s" }}>
               {personalInfo.name}
             </h1>
-            <p className="text-base leading-relaxed max-w-md mb-8" style={{ color: "var(--ink-dim)" }}>
+            <p className="fade-up text-base leading-relaxed max-w-md mb-8" style={{ color: "var(--ink-dim)", animationDelay: "0.16s" }}>
               {personalInfo.bio}
             </p>
 
-            <div className="flex flex-col gap-2 font-mono text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
+            <div className="fade-up flex flex-col gap-2 font-mono text-sm mb-8" style={{ color: "var(--ink-dim)", animationDelay: "0.22s" }}>
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {personalInfo.location}</span>
               <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {personalInfo.email}</span>
               <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {personalInfo.phone}</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="fade-up flex items-center gap-3" style={{ animationDelay: "0.28s" }}>
               <button
                 onClick={() => scrollTo('systems')}
-                className="px-5 py-2.5 font-medium text-sm rounded"
+                className="btn-primary px-5 py-2.5 font-medium text-sm rounded"
                 style={{ backgroundColor: "var(--gold)", color: "var(--bg)" }}
               >
                 View systems built
               </button>
               <a href={personalInfo.github} target="_blank" rel="noreferrer"
-                 className="p-2.5 rounded panel" aria-label="GitHub">
+                 className="icon-btn p-2.5 rounded panel" aria-label="GitHub">
                 <GithubIcon />
               </a>
               <a href={personalInfo.linkedin} target="_blank" rel="noreferrer"
-                 className="p-2.5 rounded panel" aria-label="LinkedIn">
+                 className="icon-btn p-2.5 rounded panel" aria-label="LinkedIn">
                 <LinkedinIcon />
               </a>
             </div>
           </div>
 
-          <div className="panel p-2">
+          <div className="panel p-2 fade-up" style={{ animationDelay: "0.1s" }}>
             <div className="aspect-[4/5] overflow-hidden rounded" style={{ backgroundColor: "var(--ink-dim)" }}>
               <img
                 src={personalInfo.image}
@@ -241,8 +241,8 @@ export default function App() {
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
-            <p className="font-mono text-xs mt-2 pt-2 border-t text-center" style={{ color: "var(--ink-dim)", borderColor: "var(--gold-line)" }}>
-              FIG. 1 — B. PAUL, KOLKATA
+            <p className="font-mono text-xs mt-2 pt-2 border-t flex items-center justify-center gap-2" style={{ color: "var(--ink-dim)", borderColor: "var(--gold-line)" }}>
+              <span className="status-dot" /> ONLINE — KOLKATA, IN
             </p>
           </div>
         </section>
@@ -280,7 +280,7 @@ export default function App() {
           </p>
           <div className="grid md:grid-cols-2 gap-5">
             {projects.map((p) => (
-              <div key={p.title} className="panel p-6 flex flex-col">
+              <div key={p.title} className="panel project-card p-6 flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
                   {p.icon}
                   <h3 className="font-display font-semibold text-lg">{p.title}</h3>
