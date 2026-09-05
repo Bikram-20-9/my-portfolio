@@ -65,22 +65,28 @@ body {
   color: var(--bg);
 }
 
-/* --- subtle circuit-substrate texture, very low opacity --- */
+/* --- subtle circuit-substrate texture, drifting very slowly --- */
 .pcb-texture {
   background-image:
     radial-gradient(var(--gold-line) 1px, transparent 1px);
   background-size: 28px 28px;
   background-position: -6px -6px;
+  animation: drift 40s linear infinite;
+}
+@keyframes drift {
+  from { background-position: -6px -6px; }
+  to { background-position: 34px 34px; }
 }
 
-/* --- one orchestrated entrance sequence for the hero, nothing else --- */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fade-up {
+/* --- scroll-triggered reveal, used on every section via <Reveal> --- */
+.reveal {
   opacity: 0;
-  animation: fadeUp 0.6s ease-out forwards;
+  transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* --- status LED: a live-system cue, not decoration --- */
@@ -114,6 +120,7 @@ body {
 }
 .project-card {
   transition: border-color 0.2s ease, transform 0.2s ease;
+  will-change: transform;
 }
 .project-card:hover {
   border-color: var(--gold);
