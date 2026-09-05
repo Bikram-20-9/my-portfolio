@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import {
   Mail, Phone, MapPin, Moon, Sun, Briefcase, GraduationCap,
@@ -28,7 +28,124 @@ const LinkedinIcon = (props) => (
   </svg>
 );
 
-// --- DATA ---
+// --- SCROLL-DRIVEN INTERACTION HELPERS ---
+// Everything below fires based on what the person is doing (scrolling,
+// hovering) rather than on a timer, so it stays purposeful instead of busy.
+
+function useReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.unobserve(el);
+        }
+      },
+      { threshold, rootMargin: '0px 0px -60px 0px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, visible];
+}
+
+function Reveal({ children, delay = 0, className = '' }) {
+  const [ref, visible] = useReveal();
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${visible ? 'reveal-visible' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Digit-only metrics (e.g. "2") count up on reveal; compound strings
+// (e.g. "3 (+2 planned)", "1 wk → <1 day") render as-is — animating a
+// count for text that isn't a plain number would look broken, not cool.
+function MetricValue({ value, active }) {
+  const isPlainNumber = /^\d+$/.test(value.trim());
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!active || !isPlainNumber) return;
+    const target = parseInt(value, 10);
+    const duration = 600;
+    const start = performance.now();
+    let raf;
+    const step = (t) => {
+      const p = Math.min((t - start) / duration, 1);
+      setN(Math.round(p * target));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active, isPlainNumber, value]);
+  return <>{isPlainNumber ? n : value}</>;
+}
+
+// Subtle cursor-tilt on project cards — a "new-gen" tactile touch that
+// only activates on hover/mousemove, so it costs nothing at rest.
+function TiltCard({ children, className }) {
+  const ref = useRef(null);
+  const handleMove = (e) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 7}deg) rotateX(${-y * 7}deg) translateY(-4px)`;
+  };
+  const handleLeave = () => {
+    if (ref.current) ref.current.style.transform = '';
+  };
+  return (
+    <div ref={ref} onMouseMove={handleMove} onMouseLeave={handleLeave} className={className}>
+      {children}
+    </div>
+  );
+}
+
+
+function ProjectCard({ p, delay }) {
+  const [ref, visible] = useReveal();
+  return (
+    <div ref={ref} className={`reveal ${visible ? 'reveal-visible' : ''}`} style={{ transitionDelay: `${delay}ms` }}>
+      <TiltCard className="panel project-card p-6 flex flex-col h-full">
+        <div className="flex items-center gap-3 mb-3">
+          {p.icon}
+          <h3 className="font-display font-semibold text-lg">{p.title}</h3>
+        </div>
+        <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{p.problem}</p>
+        <ul className="space-y-2 mb-5 flex-grow">
+          {p.points.map((pt, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <span className="via-dot mt-1.5" />
+              <span>{pt}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-end justify-between pt-4 border-t" style={{ borderColor: "var(--gold-line)" }}>
+          <div>
+            <div className="font-display text-xl font-bold" style={{ color: "var(--gold)" }}>
+              <MetricValue value={p.metric.value} active={visible} />
+            </div>
+            <div className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{p.metric.label}</div>
+          </div>
+          <div className="flex flex-wrap gap-1.5 justify-end">
+            {p.stack.map((s) => <span key={s} className="tag">{s}</span>)}
+          </div>
+        </div>
+      </TiltCard>
+    </div>
+  );
+}
+
 // Every claim below is backed by a real, specific detail. If you add
 // something new, keep the same rule: specific > impressive-sounding.
 
@@ -128,6 +245,7 @@ const NAV_ITEMS = ["Home", "Systems", "Experience", "Education"];
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
+  const [scrollPct, setScrollPct] = useState(0);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -143,8 +261,12 @@ export default function App() {
           setActiveSection(id);
         }
       }
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      setScrollPct(max > 0 ? (h.scrollTop / max) * 100 : 0);
     };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -158,6 +280,14 @@ export default function App() {
       className="min-h-screen pcb-texture"
       style={{ backgroundColor: "var(--bg)", color: "var(--ink)" }}
     >
+      {/* --- SCROLL PROGRESS --- */}
+      <div className="fixed top-0 left-0 w-full h-[2px] z-[60]" style={{ backgroundColor: "var(--gold-line)" }}>
+        <div
+          className="h-full"
+          style={{ width: `${scrollPct}%`, backgroundColor: "var(--gold)", transition: "width 0.1s linear" }}
+        />
+      </div>
+
       {/* --- NAV --- */}
       <nav
         className="fixed w-full z-50 top-0 border-b"
@@ -197,42 +327,52 @@ export default function App() {
         {/* --- HERO --- */}
         <section id="home" className="py-20 grid md:grid-cols-[1.3fr_0.7fr] gap-12 items-start">
           <div>
-            <p className="fade-up font-mono text-sm mb-3" style={{ color: "var(--ink-dim)" }}>
-              {personalInfo.role}
-            </p>
-            <h1 className="fade-up font-display text-5xl font-bold mb-6 leading-tight" style={{ animationDelay: "0.08s" }}>
-              {personalInfo.name}
-            </h1>
-            <p className="fade-up text-base leading-relaxed max-w-md mb-8" style={{ color: "var(--ink-dim)", animationDelay: "0.16s" }}>
-              {personalInfo.bio}
-            </p>
+            <Reveal>
+              <p className="font-mono text-sm mb-3" style={{ color: "var(--ink-dim)" }}>
+                {personalInfo.role}
+              </p>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1 className="font-display text-5xl font-bold mb-6 leading-tight">
+                {personalInfo.name}
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="text-base leading-relaxed max-w-md mb-8" style={{ color: "var(--ink-dim)" }}>
+                {personalInfo.bio}
+              </p>
+            </Reveal>
 
-            <div className="fade-up flex flex-col gap-2 font-mono text-sm mb-8" style={{ color: "var(--ink-dim)", animationDelay: "0.22s" }}>
-              <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {personalInfo.location}</span>
-              <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {personalInfo.email}</span>
-              <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {personalInfo.phone}</span>
-            </div>
+            <Reveal delay={220}>
+              <div className="flex flex-col gap-2 font-mono text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
+                <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {personalInfo.location}</span>
+                <span className="flex items-center gap-2"><Mail className="w-4 h-4" /> {personalInfo.email}</span>
+                <span className="flex items-center gap-2"><Phone className="w-4 h-4" /> {personalInfo.phone}</span>
+              </div>
+            </Reveal>
 
-            <div className="fade-up flex items-center gap-3" style={{ animationDelay: "0.28s" }}>
-              <button
-                onClick={() => scrollTo('systems')}
-                className="btn-primary px-5 py-2.5 font-medium text-sm rounded"
-                style={{ backgroundColor: "var(--gold)", color: "var(--bg)" }}
-              >
-                View systems built
-              </button>
-              <a href={personalInfo.github} target="_blank" rel="noreferrer"
-                 className="icon-btn p-2.5 rounded panel" aria-label="GitHub">
-                <GithubIcon />
-              </a>
-              <a href={personalInfo.linkedin} target="_blank" rel="noreferrer"
-                 className="icon-btn p-2.5 rounded panel" aria-label="LinkedIn">
-                <LinkedinIcon />
-              </a>
-            </div>
+            <Reveal delay={280}>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => scrollTo('systems')}
+                  className="btn-primary px-5 py-2.5 font-medium text-sm rounded"
+                  style={{ backgroundColor: "var(--gold)", color: "var(--bg)" }}
+                >
+                  View systems built
+                </button>
+                <a href={personalInfo.github} target="_blank" rel="noreferrer"
+                   className="icon-btn p-2.5 rounded panel" aria-label="GitHub">
+                  <GithubIcon />
+                </a>
+                <a href={personalInfo.linkedin} target="_blank" rel="noreferrer"
+                   className="icon-btn p-2.5 rounded panel" aria-label="LinkedIn">
+                  <LinkedinIcon />
+                </a>
+              </div>
+            </Reveal>
           </div>
 
-          <div className="panel p-2 fade-up" style={{ animationDelay: "0.1s" }}>
+          <Reveal delay={100} className="panel p-2">
             <div className="aspect-[4/5] overflow-hidden rounded" style={{ backgroundColor: "var(--ink-dim)" }}>
               <img
                 src={personalInfo.image}
@@ -244,115 +384,104 @@ export default function App() {
             <p className="font-mono text-xs mt-2 pt-2 border-t flex items-center justify-center gap-2" style={{ color: "var(--ink-dim)", borderColor: "var(--gold-line)" }}>
               <span className="status-dot" /> ONLINE — KOLKATA, IN
             </p>
-          </div>
+          </Reveal>
         </section>
 
         {/* --- SPEC SHEET (SKILLS) --- */}
         <section className="py-12 border-t" style={{ borderColor: "var(--gold-line)" }}>
-          <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-3">
-            <Terminal className="w-5 h-5" style={{ color: "var(--gold)" }} /> Spec sheet
-          </h2>
+          <Reveal>
+            <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-3">
+              <Terminal className="w-5 h-5" style={{ color: "var(--gold)" }} /> Spec sheet
+            </h2>
+          </Reveal>
           <div className="panel overflow-hidden">
             {specSheet.map((row, i) => (
-              <div
-                key={row.category}
-                className="grid grid-cols-[120px_1fr] md:grid-cols-[160px_1fr] gap-4 px-5 py-4"
-                style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
-              >
-                <span className="font-medium text-sm pt-1">{row.category}</span>
-                <div className="flex flex-wrap gap-2">
-                  {row.items.map((item) => (
-                    <span key={item} className="tag">{item}</span>
-                  ))}
+              <Reveal key={row.category} delay={i * 60}>
+                <div
+                  className="grid grid-cols-[120px_1fr] md:grid-cols-[160px_1fr] gap-4 px-5 py-4"
+                  style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
+                >
+                  <span className="font-medium text-sm pt-1">{row.category}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {row.items.map((item) => (
+                      <span key={item} className="tag">{item}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
         {/* --- SYSTEMS BUILT (PROJECTS) --- */}
         <section id="systems" className="py-16">
-          <h2 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
-            <Plane className="w-5 h-5" style={{ color: "var(--gold)" }} /> Systems built
-          </h2>
-          <p className="text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
-            Real deployments from the Weevils Drones internship — problem, build, and outcome for each.
-          </p>
+          <Reveal>
+            <h2 className="font-display text-2xl font-bold mb-2 flex items-center gap-3">
+              <Plane className="w-5 h-5" style={{ color: "var(--gold)" }} /> Systems built
+            </h2>
+            <p className="text-sm mb-8" style={{ color: "var(--ink-dim)" }}>
+              Real deployments from the Weevils Drones internship — problem, build, and outcome for each.
+            </p>
+          </Reveal>
           <div className="grid md:grid-cols-2 gap-5">
-            {projects.map((p) => (
-              <div key={p.title} className="panel project-card p-6 flex flex-col">
-                <div className="flex items-center gap-3 mb-3">
-                  {p.icon}
-                  <h3 className="font-display font-semibold text-lg">{p.title}</h3>
-                </div>
-                <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{p.problem}</p>
-                <ul className="space-y-2 mb-5 flex-grow">
-                  {p.points.map((pt, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <span className="via-dot mt-1.5" />
-                      <span>{pt}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-end justify-between pt-4 border-t" style={{ borderColor: "var(--gold-line)" }}>
-                  <div>
-                    <div className="font-display text-xl font-bold" style={{ color: "var(--gold)" }}>{p.metric.value}</div>
-                    <div className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{p.metric.label}</div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 justify-end">
-                    {p.stack.map((s) => <span key={s} className="tag">{s}</span>)}
-                  </div>
-                </div>
-              </div>
+            {projects.map((p, i) => (
+              <ProjectCard key={p.title} p={p} delay={i * 100} />
             ))}
           </div>
         </section>
 
         {/* --- EXPERIENCE --- */}
         <section id="experience" className="py-16 border-t" style={{ borderColor: "var(--gold-line)" }}>
-          <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
-            <Briefcase className="w-5 h-5" style={{ color: "var(--gold)" }} /> Experience
-          </h2>
-          {experience.map((job) => (
-            <div key={job.company} className="grid md:grid-cols-[160px_1fr] gap-6">
-              <div>
-                <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{job.period}</span>
+          <Reveal>
+            <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
+              <Briefcase className="w-5 h-5" style={{ color: "var(--gold)" }} /> Experience
+            </h2>
+          </Reveal>
+          {experience.map((job, jIdx) => (
+            <Reveal key={job.company} delay={jIdx * 100}>
+              <div className="grid md:grid-cols-[160px_1fr] gap-6">
+                <div>
+                  <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{job.period}</span>
+                </div>
+                <div className="pl-6 border-l-2" style={{ borderColor: "var(--gold-line)" }}>
+                  <h3 className="font-display font-semibold text-lg">{job.role}</h3>
+                  <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{job.company}</p>
+                  <ul className="space-y-2.5">
+                    {job.points.map((pt, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span className="via-dot mt-1.5" />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div className="pl-6 border-l-2" style={{ borderColor: "var(--gold-line)" }}>
-                <h3 className="font-display font-semibold text-lg">{job.role}</h3>
-                <p className="text-sm mb-4" style={{ color: "var(--ink-dim)" }}>{job.company}</p>
-                <ul className="space-y-2.5">
-                  {job.points.map((pt, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <span className="via-dot mt-1.5" />
-                      <span>{pt}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            </Reveal>
           ))}
         </section>
 
         {/* --- EDUCATION --- */}
         <section id="education" className="py-16 border-t" style={{ borderColor: "var(--gold-line)" }}>
-          <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
-            <GraduationCap className="w-5 h-5" style={{ color: "var(--gold)" }} /> Education
-          </h2>
+          <Reveal>
+            <h2 className="font-display text-2xl font-bold mb-8 flex items-center gap-3">
+              <GraduationCap className="w-5 h-5" style={{ color: "var(--gold)" }} /> Education
+            </h2>
+          </Reveal>
           <div className="panel overflow-hidden">
             {education.map((edu, i) => (
-              <div
-                key={edu.degree}
-                className="grid grid-cols-[100px_1fr_auto] gap-4 items-center px-5 py-4"
-                style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
-              >
-                <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{edu.period}</span>
-                <div>
-                  <div className="font-medium text-sm">{edu.degree}</div>
-                  <div className="text-xs" style={{ color: "var(--ink-dim)" }}>{edu.institution}</div>
+              <Reveal key={edu.degree} delay={i * 60}>
+                <div
+                  className="grid grid-cols-[100px_1fr_auto] gap-4 items-center px-5 py-4"
+                  style={{ borderTop: i === 0 ? "none" : "1px solid var(--gold-line)" }}
+                >
+                  <span className="font-mono text-xs" style={{ color: "var(--ink-dim)" }}>{edu.period}</span>
+                  <div>
+                    <div className="font-medium text-sm">{edu.degree}</div>
+                    <div className="text-xs" style={{ color: "var(--ink-dim)" }}>{edu.institution}</div>
+                  </div>
+                  {edu.grade && <span className="tag">{edu.grade}</span>}
                 </div>
-                {edu.grade && <span className="tag">{edu.grade}</span>}
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
